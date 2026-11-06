@@ -7,6 +7,7 @@ Interactive supplementary material for the article *"Intersectional inequalities
 | `Supplementary_Figure_S1.html` | Interactive intersectional trajectories: deviation of each intersectional stratum from the average stratum across six survey waves, probability scale |
 | `Supplementary_Figure_S2.html` | Interactive version of Figure 3: deviation in predicted uptake from the average stratum (percentage points), all strata, screenings and waves |
 | `index.html` | Landing page |
+| `code/` | R analysis code (data preparation, cross-classified MAIHDA models, tables and figures); see `code/README.md` |
 
 The files are self-contained (Plotly embedded) and open in any web browser, offline.
 
