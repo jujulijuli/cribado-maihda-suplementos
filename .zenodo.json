@@ -1,0 +1,11 @@
+{
+  "upload_type": "dataset",
+  "title": "Intersectional inequalities in cancer screening participation in Spain (2009–2023): interactive supplementary figures (cross-classified MAIHDA)",
+  "description": "Interactive supplementary figures S1 and S2 for the article 'Intersectional inequalities in cancer screening participation in Spain over six survey waves (2009–2023): a cross-classified MAIHDA analysis' (J Epidemiol Community Health, submitted). Self-contained HTML files (Plotly) showing stratum-level deviations in predicted screening uptake from the average stratum, on the probability scale, for colorectal, breast and cervical cancer screening across six Spanish national health surveys.",
+  "creators": [
+    {"name": "Librero López, Julián", "affiliation": "Navarrabiomed – Hospital Universitario de Navarra – Universidad Pública de Navarra, IdiSNA"}
+  ],
+  "keywords": ["MAIHDA", "intersectionality", "cancer screening", "health inequalities", "Spain", "multilevel models"],
+  "license": "cc-by-4.0",
+  "language": "eng"
+}
