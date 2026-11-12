@@ -36,7 +36,7 @@ tema_base <- theme_classic(base_size = 9) +
         plot.caption = element_text(size = 6.5, color = "grey50", hjust = 0, lineheight = 1.3),
         plot.margin = margin(4, 6, 4, 4, "mm"))
 
-vpc   <- read_csv(file.path(DIR_OUTPUT, "tabla_vpc_cc.csv"), show_col_types = FALSE)
+vpc   <- read_csv(file.path(DIR_OUTPUT, "tabla_vpc_v4.csv"), show_col_types = FALSE)
 # Recalcular VPC/ICC/PCV sin redondear desde las varianzas (evita doble redondeo:
 # 03 guarda los porcentajes ya redondeados a 2 decimales)
 vpc <- vpc |> mutate(
@@ -46,8 +46,8 @@ vpc <- vpc |> mutate(
   ICC_total_pct   = VPC_estrato_pct + VPC_ccaa_pct,
   PCV_estrato_pct = 100 * (sigma2_estrato_nulo - sigma2_estrato_ajust) / sigma2_estrato_nulo,
   PCV_ccaa_pct    = 100 * (sigma2_ccaa_nulo - sigma2_ccaa_ajust) / sigma2_ccaa_nulo) |> select(-.den)
-or_t  <- read_csv(file.path(DIR_OUTPUT, "tabla_or_cc.csv"), show_col_types = FALSE)
-blups <- read_csv(file.path(DIR_OUTPUT, "tabla_blups_cc.csv"), show_col_types = FALSE)
+or_t  <- read_csv(file.path(DIR_OUTPUT, "tabla_or_v4.csv"), show_col_types = FALSE)
+blups <- read_csv(file.path(DIR_OUTPUT, "tabla_blups_v4.csv"), show_col_types = FALSE)
 prev  <- read_csv(file.path(DIR_OUTPUT, "tabla_prevalencias.csv"), show_col_types = FALSE)
 vpc_nest <- if (file.exists(file.path(DIR_OUTPUT, "tabla_vpc.csv")))
   read_csv(file.path(DIR_OUTPUT, "tabla_vpc.csv"), show_col_types = FALSE) else NULL
@@ -132,23 +132,31 @@ add_sheet("BLUPs", "Stratum BLUPs from null cross-classified models", "SE: condi
 saveWorkbook(wb, file.path(DIR_OUTPUT, "tablas_JECH_CCR_cc.xlsx"), overwrite = TRUE)
 message("✓ tablas_JECH_CCR_cc.xlsx")
 
-# ── Figura 2: VPC ───────────────────────────────────────────
+# ── Figura 2: VPC con IC bootstrap ──────────────────────────
 vpc_long <- vpc |>
   mutate(Programme = factor(PROG_FIG[variable], levels = PROG_FIG)) |>
-  select(anyo, Programme, vpc_ccaa = VPC_ccaa_pct, vpc_est = VPC_estrato_pct) |>
+  select(anyo, Programme,
+         vpc_ccaa = VPC_ccaa_pct, vpc_est = VPC_estrato_pct,
+         vpc_ccaa_lo, vpc_ccaa_hi, vpc_est_lo, vpc_est_hi) |>
   pivot_longer(c(vpc_ccaa, vpc_est), names_to = "Level", values_to = "VPC") |>
-  mutate(Level = factor(Level, levels = c("vpc_ccaa", "vpc_est"),
-                        labels = c("Autonomous Community (AC)", "Intersectional stratum")))
-fig2 <- ggplot(vpc_long, aes(anyo, VPC, color = Level, shape = Level, group = Level)) +
+  mutate(
+    lo = ifelse(Level == "vpc_ccaa", vpc_ccaa_lo, vpc_est_lo),
+    hi = ifelse(Level == "vpc_ccaa", vpc_ccaa_hi, vpc_est_hi),
+    Level = factor(Level, levels = c("vpc_ccaa", "vpc_est"),
+                   labels = c("Autonomous Community (AC)", "Intersectional stratum")))
+fig2 <- ggplot(vpc_long, aes(anyo, VPC, color = Level, fill = Level, shape = Level, group = Level)) +
   geom_vline(data = data.frame(Programme = factor(PROG_FIG[["soh_2a"]], levels = PROG_FIG), x = 2014),
              aes(xintercept = x), linetype = "dotted", color = "grey60", linewidth = 0.5) +
+  geom_ribbon(aes(ymin = lo, ymax = hi), alpha = 0.15, color = NA) +
   geom_line(linewidth = 0.8) + geom_point(size = 2.5) +
   facet_wrap(~Programme, ncol = 3) +
   scale_color_manual(name = "VPC level", values = c("Autonomous Community (AC)" = COL_CCAA, "Intersectional stratum" = COL_ESTRA)) +
+  scale_fill_manual(name  = "VPC level", values = c("Autonomous Community (AC)" = COL_CCAA, "Intersectional stratum" = COL_ESTRA)) +
   scale_shape_manual(name = "VPC level", values = c("Autonomous Community (AC)" = 16, "Intersectional stratum" = 17)) +
   scale_x_continuous(name = "Survey year", breaks = as.integer(names(OLAS_LAB))) +
   scale_y_continuous(name = "Variance Partition Coefficient (%)", limits = c(0, NA), labels = function(x) paste0(x, "%")) +
-  labs(caption = paste0("Null three-level cross-classified MAIHDA models (strata crossed with 19 territorial units). ",
+  labs(caption = paste0("Null three-level cross-classified MAIHDA models (strata crossed with 19 territorial units). VPC latent-variable approach. ",
+                        "\nShaded bands: 95% bootstrap CI (200 iterations, resampling within autonomous communities). ",
                         "\nOrange circles: VPC at AC level. Blue triangles: VPC at stratum level. ",
                         "Dotted line (CRC): 2014. Strata: sex × education × country of birth × age group.")) +
   tema_base + theme(legend.position = "bottom", legend.key.width = unit(0.8, "cm"),
